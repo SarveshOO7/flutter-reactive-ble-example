@@ -64,6 +64,7 @@ class _DeviceInteractorState extends State<DeviceInteractor> {
   bool isPlayingGame = false;
   List<int> pattern = [];
   int gotChanged = 17;
+  int prevValue = 17;
 
   @override
   Widget build(BuildContext context) {
@@ -106,17 +107,21 @@ class _DeviceInteractorState extends State<DeviceInteractor> {
             ? StreamBuilder<List<int>>(
                 stream: subscriptionStream,
                 builder: (context, snapshot) {
-                  // Timer(Duration(seconds: 1), () {
-                  //   setState(() {
-                  //     gotChanged = 17;
-                  //   });
-                  // });
                   if (snapshot.hasData) {
                     // print(snapshot.data);
-                    gotChanged = snapshot.data![0];
-                    if (isPlayingGame && pattern.contains(snapshot.data![0])) {
+                    // gotChanged = snapshot.data![0];
+                    if (prevValue != snapshot.data![0]) {
+                      prevValue = snapshot.data![0];
+                      gotChanged = snapshot.data![0];
+                      Timer(Duration(seconds: 3), () {
+                        setState(() {
+                          gotChanged = 17;
+                        });
+                      });
+                    }
+                    if (isPlayingGame && pattern.contains(gotChanged)) {
                       score += 1;
-                      if (pattern[0] == snapshot.data![0]) {
+                      if (pattern[0] == gotChanged) {
                         score += 2;
                         pattern.removeAt(0);
                         print("Remaining pattern: " + pattern.toString());
@@ -139,7 +144,10 @@ class _DeviceInteractorState extends State<DeviceInteractor> {
                           isPlayingGame = false;
                         }
                       }
-                    } else if (isPlayingGame) {
+                    } else if (isPlayingGame &&
+                        !pattern.contains(gotChanged) &&
+                        gotChanged != 17) {
+                      print("GotChanged on deletion " + gotChanged.toString());
                       score -= 1;
                     }
                   }
@@ -223,6 +231,8 @@ class _DeviceInteractorState extends State<DeviceInteractor> {
                             }
                             isSettingBoard = _selectedOption[0];
                             isPlayingGame = _selectedOption[1];
+                            gotChanged = 17;
+                            score = 0;
                           });
                         },
                         borderRadius:
